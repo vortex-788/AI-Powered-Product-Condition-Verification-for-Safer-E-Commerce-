@@ -2,8 +2,11 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Ensure uploads directory exists
-const uploadDir = path.join(__dirname, '..', 'uploads');
+const os = require('os');
+
+// In cloud environments like Render, the local filesystem is ephemeral and sometimes read-only.
+// We must use the OS temp directory.
+const uploadDir = path.join(os.tmpdir(), 'verishield-uploads');
 ['images', 'videos', 'returns'].forEach(dir => {
   const fullPath = path.join(uploadDir, dir);
   if (!fs.existsSync(fullPath)) {
