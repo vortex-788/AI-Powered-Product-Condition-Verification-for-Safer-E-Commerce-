@@ -7,9 +7,7 @@ require('dotenv').config();
 const app = express();
 
 // Middleware
-app.use(cors({
-  origin: ['http://localhost:3000', 'https://ai-powered-product-condition-verifi-five.vercel.app']
-}));
+app.use(cors());
 app.use(express.json());
 const os = require('os');
 const uploadDir = path.join(os.tmpdir(), 'verishield-uploads');
