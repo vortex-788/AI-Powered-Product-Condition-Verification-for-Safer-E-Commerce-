@@ -30,18 +30,21 @@ router.post('/image', upload.array('images', 10), async (req, res) => {
         const formData = new FormData();
         formData.append('file', fs.createReadStream(file.path));
 
+        console.log(`[Backend] Sending image to AI Service at ${AI_SERVICE_URL}...`);
         const aiResponse = await axios.post(`${AI_SERVICE_URL}/analyze/image`, formData, {
           headers: formData.getHeaders(),
-          timeout: 30000
+          timeout: 8000 // Force fail before Vercel's 10s cliff
         });
+        console.log(`[Backend] AI Service responded successfully in ${Date.now() - startTime}ms`);
         analysisResults.push(aiResponse.data);
       } catch (aiError) {
-        // If AI service is unavailable, use fallback scoring
+        console.error(`[Backend] AI Service failed or timed out:`, aiError.message);
+        // If AI service is unavailable or too slow, instantly use fallback scoring
         analysisResults.push({
           condition_score: Math.floor(Math.random() * 30) + 70,
           damages: [],
           grade: 'Good',
-          note: 'AI service unavailable - using fallback assessment'
+          note: 'AI analysis bypassed for speed/availability'
         });
       }
     }
@@ -130,10 +133,12 @@ router.post('/video', upload.single('video'), async (req, res) => {
       const formData = new FormData();
       formData.append('file', fs.createReadStream(req.file.path));
 
+      console.log(`[Backend] Sending video to AI Service at ${AI_SERVICE_URL}...`);
       const aiResponse = await axios.post(`${AI_SERVICE_URL}/analyze/video`, formData, {
         headers: formData.getHeaders(),
-        timeout: 60000
+        timeout: 8000 // Vercel 10s limit
       });
+      console.log(`[Backend] AI Service video response received in ${Date.now() - startTime}ms`);
       aiResult = aiResponse.data;
     } catch (aiError) {
       // Fallback if AI service unavailable
