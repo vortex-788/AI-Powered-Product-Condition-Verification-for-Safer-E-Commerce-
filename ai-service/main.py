@@ -1,0 +1,109 @@
+"""
+VeriShield AI Service - Product Condition Verification Engine
+FastAPI server providing damage detection, video analysis, and fraud comparison.
+"""
+import os
+import io
+import uuid
+import tempfile
+from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+import numpy as np
+from PIL import Image
+import cv2
+
+from services.damage_detector import DamageDetector
+from services.video_processor import VideoProcessor
+from services.fraud_comparator import FraudComparator
+
+app = FastAPI(
+    title="VeriShield AI Service",
+    description="AI-Powered Product Condition Verification Engine",
+    version="1.0.0"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Initialize services
+damage_detector = DamageDetector()
+video_processor = VideoProcessor(damage_detector)
+fraud_comparator = FraudComparator()
+
+
+@app.get("/")
+async def root():
+    return {"service": "VeriShield AI Engine", "version": "1.0.0", "status": "active"}
+
+
+@app.get("/health")
+async def health():
+    return {"status": "healthy", "models_loaded": True}
+
+
+@app.post("/analyze/image")
+async def analyze_image(file: UploadFile = File(...)):
+    """Analyze a product image for damage detection."""
+    try:
+        contents = await file.read()
+        image = Image.open(io.BytesIO(contents)).convert("RGB")
+        image_np = np.array(image)
+        image_cv = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
+
+        result = damage_detector.analyze(image_cv)
+        return JSONResponse(content=result)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/analyze/video")
+async def analyze_video(file: UploadFile = File(...)):
+    """Analyze a product video by extracting and processing frames."""
+    try:
+        # Save video to temp file
+        suffix = os.path.splitext(file.filename)[1] if file.filename else ".mp4"
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+            contents = await file.read()
+            tmp.write(contents)
+            tmp_path = tmp.name
+
+        result = video_processor.analyze_video(tmp_path)
+
+        # Cleanup
+        os.unlink(tmp_path)
+        return JSONResponse(content=result)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/compare")
+async def compare_images(
+    original: UploadFile = File(...),
+    returned: UploadFile = File(...)
+):
+    """Compare original vs returned product images for fraud detection."""
+    try:
+        orig_contents = await original.read()
+        ret_contents = await returned.read()
+
+        orig_image = np.array(Image.open(io.BytesIO(orig_contents)).convert("RGB"))
+        ret_image = np.array(Image.open(io.BytesIO(ret_contents)).convert("RGB"))
+
+        orig_cv = cv2.cvtColor(orig_image, cv2.COLOR_RGB2BGR)
+        ret_cv = cv2.cvtColor(ret_image, cv2.COLOR_RGB2BGR)
+
+        result = fraud_comparator.compare(orig_cv, ret_cv)
+        return JSONResponse(content=result)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
