@@ -62,6 +62,10 @@ class DamageDetector:
         scale = analysis_size / max(h, w)
         resized = cv2.resize(image, None, fx=scale, fy=scale)
 
+        # Assess initial image quality for evaluation metrics and confidence weighting
+        quality_metrics = self._assess_image_quality(resized)
+        reliability = quality_metrics['reliability_multiplier']
+
         # Run detection pipeline
         edge_damage = self._detect_edge_anomalies(resized)
         color_damage = self._detect_color_anomalies(resized)
@@ -85,6 +89,8 @@ class DamageDetector:
         ]:
             for dmg in damages:
                 dmg['detection_source'] = source
+                # Apply model optimization: penalize confidence if image quality is poor
+                dmg['confidence'] = round(dmg['confidence'] * reliability, 3)
                 all_damages.append(dmg)
                 damage_area_ratio += dmg.get('area_ratio', 0)
 
@@ -153,13 +159,51 @@ class DamageDetector:
                 'total_detections': len(all_damages),
                 'detection_methods': ['edge', 'color', 'texture', 'contour'] + (['ml_model'] if ml_predictions else []),
                 'image_dimensions': {'width': w, 'height': h},
-                'ml_model_active': self.model_trained
+                'ml_model_active': self.model_trained,
+                'image_quality_metrics': quality_metrics
             }
+        }
+
+    def _assess_image_quality(self, image: np.ndarray) -> Dict[str, Any]:
+        """Assess image for blur, brightness, and contrast to establish baseline evaluation metrics."""
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        
+        # Blur detection via Variance of Laplacian
+        laplacian_var = cv2.Laplacian(gray, cv2.CV_64F).var()
+        is_blurry = laplacian_var < 100
+        
+        # Brightness via mean pixel intensity
+        brightness = np.mean(gray)
+        is_underexposed = brightness < 40
+        is_overexposed = brightness > 215
+        
+        # Contrast via standard deviation
+        contrast = np.std(gray)
+        is_low_contrast = contrast < 35
+        
+        # Calculate a reliability score multiplier (0.5 to 1.0)
+        reliability = 1.0
+        if is_blurry: reliability -= 0.2
+        if is_underexposed or is_overexposed: reliability -= 0.15
+        if is_low_contrast: reliability -= 0.15
+        
+        return {
+            'blur_score': round(float(laplacian_var), 2),
+            'brightness': round(float(brightness), 2),
+            'contrast': round(float(contrast), 2),
+            'is_blurry': bool(is_blurry),
+            'is_poor_lighting': bool(is_underexposed or is_overexposed),
+            'is_low_contrast': bool(is_low_contrast),
+            'reliability_multiplier': max(0.4, min(1.0, reliability))
         }
 
     def _detect_edge_anomalies(self, image: np.ndarray) -> List[Dict]:
         """Detect scratches and cracks via edge detection."""
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        
+        # Apply CLAHE for better contrast and edge visibility
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+        gray = clahe.apply(gray)
 
         # Stronger blur to suppress noise
         blurred = cv2.GaussianBlur(gray, (7, 7), 1.5)
@@ -305,6 +349,11 @@ class DamageDetector:
         Only flag if there's a MIX of textured and smooth blocks.
         """
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        
+        # Apply CLAHE for more robust texture gradient extraction
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+        gray = clahe.apply(gray)
+        
         damages = []
 
         # First check: if the entire image has very low global variance,
@@ -350,6 +399,11 @@ class DamageDetector:
     def _detect_contour_irregularities(self, image: np.ndarray) -> List[Dict]:
         """Detect dents and deformations via contour shape analysis."""
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        
+        # Apply CLAHE to equalize lighting before thresholding
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+        gray = clahe.apply(gray)
+        
         blurred = cv2.GaussianBlur(gray, (7, 7), 0)
 
         # Adaptive threshold

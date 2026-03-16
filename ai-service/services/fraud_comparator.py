@@ -110,6 +110,11 @@ class FraudComparator:
             gray1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
             gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
 
+            # Apply CLAHE for better ORB feature extraction
+            clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+            gray1 = clahe.apply(gray1)
+            gray2 = clahe.apply(gray2)
+
             orb = cv2.ORB_create(nfeatures=1000)
             kp1, des1 = orb.detectAndCompute(gray1, None)
             kp2, des2 = orb.detectAndCompute(gray2, None)
@@ -235,6 +240,11 @@ class FraudComparator:
             fraud_signals += 1
             anomalies.append('Texture mismatch despite feature similarity — possible similar-model swap')
 
+        # Signal 7: Alignment failure combined with poor features
+        if not aligned and feature_score < 0.35:
+            fraud_signals += 1
+            anomalies.append('Failed to structurally align images — potential tampering or wrong item')
+
         # ── Decision logic ──
 
         # Product swap: hash mismatch OR multiple swap signals
@@ -300,6 +310,11 @@ class FraudComparator:
         try:
             gray1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
             gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+
+            # Apply CLAHE to improve feature matching consistency
+            clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+            gray1 = clahe.apply(gray1)
+            gray2 = clahe.apply(gray2)
 
             orb = cv2.ORB_create(nfeatures=750)
             kp1, des1 = orb.detectAndCompute(gray1, None)
