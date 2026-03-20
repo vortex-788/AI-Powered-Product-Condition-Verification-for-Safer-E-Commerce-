@@ -51,6 +51,10 @@ async def health():
 async def analyze_image(file: UploadFile = File(...)):
     """Analyze a product image for damage detection."""
     try:
+        if file.filename.split(".")[-1].lower() not in ["jpg", "jpeg", "png"]:
+            raise HTTPException(status_code=400, detail="Only JPEG and PNG images are allowed")
+        if file.file.size > 1024 * 1024 * 5:
+            raise HTTPException(status_code=400, detail="File size exceeds 5MB limit")
         contents = await file.read()
         image = Image.open(io.BytesIO(contents)).convert("RGB")
         image_np = np.array(image)
@@ -66,6 +70,10 @@ async def analyze_image(file: UploadFile = File(...)):
 async def analyze_video(file: UploadFile = File(...)):
     """Analyze a product video by extracting and processing frames."""
     try:
+        if file.filename.split(".")[-1].lower() not in ["mp4", "avi"]:
+            raise HTTPException(status_code=400, detail="Only MP4 and AVI videos are allowed")
+        if file.file.size > 1024 * 1024 * 50:
+            raise HTTPException(status_code=400, detail="File size exceeds 50MB limit")
         # Save video to temp file
         suffix = os.path.splitext(file.filename)[1] if file.filename else ".mp4"
         with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
@@ -89,6 +97,14 @@ async def compare_images(
 ):
     """Compare original vs returned product images for fraud detection."""
     try:
+        if original.filename.split(".")[-1].lower() not in ["jpg", "jpeg", "png"]:
+            raise HTTPException(status_code=400, detail="Only JPEG and PNG images are allowed for original image")
+        if returned.filename.split(".")[-1].lower() not in ["jpg", "jpeg", "png"]:
+            raise HTTPException(status_code=400, detail="Only JPEG and PNG images are allowed for returned image")
+        if original.file.size > 1024 * 1024 * 5:
+            raise HTTPException(status_code=400, detail="Original image file size exceeds 5MB limit")
+        if returned.file.size > 1024 * 1024 * 5:
+            raise HTTPException(status_code=400, detail="Returned image file size exceeds 5MB limit")
         orig_contents = await original.read()
         ret_contents = await returned.read()
 
