@@ -31,7 +31,17 @@ class VideoProcessor:
         Returns:
             dict with overall score, frame results, and aggregate damage info
         """
-        cap = cv2.VideoCapture(video_path)
+        try:
+            cap = cv2.VideoCapture(video_path)
+        except Exception as e:
+            return {
+                'condition_score': 0,
+                'grade': 'Damaged',
+                'error': f'Failed to open video file: {str(e)}',
+                'frames_analyzed': 0,
+                'frame_results': [],
+                'damages': []
+            }
 
         if not cap.isOpened():
             return {
