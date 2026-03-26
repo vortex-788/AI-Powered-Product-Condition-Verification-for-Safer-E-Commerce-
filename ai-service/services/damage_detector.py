@@ -529,4 +529,10 @@ class DamageDetector:
             return 'minor'
         except Exception as e:
             logging.error(f"Error determining damage severity: {str(e)}")
-            return 'minor'
+            return 'minor' 
+
+    def _load_model_with_error_handling(self):
+        try:
+            self._load_model()
+        except Exception as e:
+            logging.error(f"Error loading model: {str(e)}")
