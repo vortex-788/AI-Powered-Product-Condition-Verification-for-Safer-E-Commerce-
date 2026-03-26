@@ -21,6 +21,16 @@ class VideoProcessor:
         self.min_frame_interval = 0.5  # Minimum seconds between frames
         self.confirmation_threshold = 2  # Damage must appear in N+ frames to be "confirmed"
 
+    def _handle_error(self, e: Exception, error_message: str) -> Dict[str, Any]:
+        return {
+            'condition_score': 0,
+            'grade': 'Damaged',
+            'error': f'{error_message}: {str(e)}',
+            'frames_analyzed': 0,
+            'frame_results': [],
+            'damages': []
+        }
+
     def analyze_video(self, video_path: str) -> Dict[str, Any]:
         """
         Analyze a product video by extracting keyframes and running damage detection.
@@ -34,32 +44,11 @@ class VideoProcessor:
         try:
             cap = cv2.VideoCapture(video_path)
         except FileNotFoundError as e:
-            return {
-                'condition_score': 0,
-                'grade': 'Damaged',
-                'error': f'Video file not found: {str(e)}',
-                'frames_analyzed': 0,
-                'frame_results': [],
-                'damages': []
-            }
+            return self._handle_error(e, 'Video file not found')
         except cv2.error as e:
-            return {
-                'condition_score': 0,
-                'grade': 'Damaged',
-                'error': f'OpenCV error: {str(e)}',
-                'frames_analyzed': 0,
-                'frame_results': [],
-                'damages': []
-            }
+            return self._handle_error(e, 'OpenCV error')
         except Exception as e:
-            return {
-                'condition_score': 0,
-                'grade': 'Damaged',
-                'error': f'An error occurred: {str(e)}',
-                'frames_analyzed': 0,
-                'frame_results': [],
-                'damages': []
-            }
+            return self._handle_error(e, 'An error occurred')
 
         if not cap.isOpened():
             return {
