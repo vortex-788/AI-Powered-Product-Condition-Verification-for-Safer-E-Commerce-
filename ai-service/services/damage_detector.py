@@ -37,7 +37,7 @@ class DamageDetector:
         """Initialize the damage detector with model weights."""
         self.model = None
         self.model_trained = False  # Gate: only use ML predictions if a trained model exists
-        self._load_model()
+        self._load_model_with_error_handling()
 
     def _load_model(self):
         """Load or initialize the ML model."""
@@ -48,6 +48,12 @@ class DamageDetector:
         self.model = None
         self.model_trained = False
         print(" Fast OpenCV-only detection active (deep learning disabled for <100ms latency)")
+
+    def _load_model_with_error_handling(self):
+        try:
+            self._load_model()
+        except Exception as e:
+            logging.error(f"Error loading model: {str(e)}")
 
     def analyze(self, image: np.ndarray) -> Dict[str, Any]:
         """
@@ -246,16 +252,14 @@ class DamageDetector:
 
             for cnt in contours:
                 area = cv2.contourArea(cnt)
-                perimeter = cv2.arcLength(cnt, True)
-
                 # Raised minimum area threshold (was 50, now 300)
                 if area < 300:
                     continue
 
                 area_ratio = area / total_area
 
-                if perimeter > 0 and area > 0:
-                    circularity = 4 * np.pi * area / (perimeter ** 2)
+                if area > 0:
+                    circularity = 4 * np.pi * area / (cv2.arcLength(cnt, True) ** 2)
 
                     # Solidity filter: damage tends to have lower solidity than product features
                     hull = cv2.convexHull(cnt)
@@ -529,10 +533,4 @@ class DamageDetector:
             return 'minor'
         except Exception as e:
             logging.error(f"Error determining damage severity: {str(e)}")
-            return 'minor' 
-
-    def _load_model_with_error_handling(self):
-        try:
-            self._load_model()
-        except Exception as e:
-            logging.error(f"Error loading model: {str(e)}")
+            return 'minor'
