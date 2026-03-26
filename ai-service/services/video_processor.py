@@ -33,11 +33,29 @@ class VideoProcessor:
         """
         try:
             cap = cv2.VideoCapture(video_path)
+        except FileNotFoundError as e:
+            return {
+                'condition_score': 0,
+                'grade': 'Damaged',
+                'error': f'Video file not found: {str(e)}',
+                'frames_analyzed': 0,
+                'frame_results': [],
+                'damages': []
+            }
+        except cv2.error as e:
+            return {
+                'condition_score': 0,
+                'grade': 'Damaged',
+                'error': f'OpenCV error: {str(e)}',
+                'frames_analyzed': 0,
+                'frame_results': [],
+                'damages': []
+            }
         except Exception as e:
             return {
                 'condition_score': 0,
                 'grade': 'Damaged',
-                'error': f'Failed to open video file: {str(e)}',
+                'error': f'An error occurred: {str(e)}',
                 'frames_analyzed': 0,
                 'frame_results': [],
                 'damages': []
