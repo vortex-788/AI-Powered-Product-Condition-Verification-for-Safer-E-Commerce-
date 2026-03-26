@@ -102,7 +102,8 @@ class FraudComparator:
                     'image_aligned': alignment_success,
                     'anomalies': anomalies
                 },
-                'recommendation': recommendation
+                'recommendation': recommendation,
+                'error': None
             }
         except Exception as e:
             logging.error(f"An error occurred: {e}")
@@ -122,7 +123,8 @@ class FraudComparator:
                     'image_aligned': False,
                     'anomalies': []
                 },
-                'recommendation': 'REVIEW REQUIRED: An error occurred during the comparison process.'
+                'recommendation': 'REVIEW REQUIRED: An error occurred during the comparison process.',
+                'error': str(e)
             }
 
     def _align_images(self, img1: np.ndarray, img2: np.ndarray) -> Tuple[np.ndarray, bool]:
