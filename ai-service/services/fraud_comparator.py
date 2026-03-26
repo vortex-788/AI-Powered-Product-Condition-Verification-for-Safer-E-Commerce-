@@ -105,8 +105,8 @@ class FraudComparator:
                 'recommendation': recommendation,
                 'error': None
             }
-        except Exception as e:
-            logging.error(f"An error occurred: {e}")
+        except cv2.error as e:
+            logging.error(f"OpenCV error occurred: {e}")
             return {
                 'similarity_score': 0,
                 'fraud_detected': False,
@@ -123,7 +123,49 @@ class FraudComparator:
                     'image_aligned': False,
                     'anomalies': []
                 },
-                'recommendation': 'REVIEW REQUIRED: An error occurred during the comparison process.',
+                'recommendation': 'REVIEW REQUIRED: An OpenCV error occurred during the comparison process.',
+                'error': str(e)
+            }
+        except np.linalg.LinAlgError as e:
+            logging.error(f"Linear algebra error occurred: {e}")
+            return {
+                'similarity_score': 0,
+                'fraud_detected': False,
+                'fraud_type': 'none',
+                'fraud_confidence': 0.0,
+                'risk_level': 'low',
+                'details': {
+                    'structural_similarity': 0,
+                    'feature_match_score': 0,
+                    'color_histogram_match': 0,
+                    'texture_analysis': 0,
+                    'perceptual_hash_score': 0,
+                    'hash_distance': 0,
+                    'image_aligned': False,
+                    'anomalies': []
+                },
+                'recommendation': 'REVIEW REQUIRED: A linear algebra error occurred during the comparison process.',
+                'error': str(e)
+            }
+        except Exception as e:
+            logging.error(f"An unexpected error occurred: {e}")
+            return {
+                'similarity_score': 0,
+                'fraud_detected': False,
+                'fraud_type': 'none',
+                'fraud_confidence': 0.0,
+                'risk_level': 'low',
+                'details': {
+                    'structural_similarity': 0,
+                    'feature_match_score': 0,
+                    'color_histogram_match': 0,
+                    'texture_analysis': 0,
+                    'perceptual_hash_score': 0,
+                    'hash_distance': 0,
+                    'image_aligned': False,
+                    'anomalies': []
+                },
+                'recommendation': 'REVIEW REQUIRED: An unexpected error occurred during the comparison process.',
                 'error': str(e)
             }
 
