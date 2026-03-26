@@ -12,6 +12,7 @@ from fastapi.responses import JSONResponse
 import numpy as np
 from PIL import Image
 import cv2
+import re
 
 from services.damage_detector import DamageDetector
 from services.video_processor import VideoProcessor
@@ -53,7 +54,10 @@ async def analyze_image(file: UploadFile = File(...)):
     try:
         allowed_file_types = ["jpg", "jpeg", "png"]
         max_file_size = 1024 * 1024 * 5
-        if file.filename.split(".")[-1].lower() not in allowed_file_types:
+        filename = file.filename
+        if not re.match("^[a-zA-Z0-9._-]+$", filename):
+            raise HTTPException(status_code=400, detail="Invalid filename")
+        if filename.split(".")[-1].lower() not in allowed_file_types:
             raise HTTPException(status_code=400, detail=f"Only {', '.join(allowed_file_types)} images are allowed")
         if file.file.size > max_file_size:
             raise HTTPException(status_code=400, detail=f"File size exceeds {max_file_size / (1024 * 1024)}MB limit")
@@ -74,7 +78,10 @@ async def analyze_video(file: UploadFile = File(...)):
     try:
         allowed_file_types = ["mp4", "avi"]
         max_file_size = 1024 * 1024 * 50
-        if file.filename.split(".")[-1].lower() not in allowed_file_types:
+        filename = file.filename
+        if not re.match("^[a-zA-Z0-9._-]+$", filename):
+            raise HTTPException(status_code=400, detail="Invalid filename")
+        if filename.split(".")[-1].lower() not in allowed_file_types:
             raise HTTPException(status_code=400, detail=f"Only {', '.join(allowed_file_types)} videos are allowed")
         if file.file.size > max_file_size:
             raise HTTPException(status_code=400, detail=f"File size exceeds {max_file_size / (1024 * 1024)}MB limit")
@@ -103,9 +110,15 @@ async def compare_images(
     try:
         allowed_file_types = ["jpg", "jpeg", "png"]
         max_file_size = 1024 * 1024 * 5
-        if original.filename.split(".")[-1].lower() not in allowed_file_types:
+        original_filename = original.filename
+        returned_filename = returned.filename
+        if not re.match("^[a-zA-Z0-9._-]+$", original_filename):
+            raise HTTPException(status_code=400, detail="Invalid original filename")
+        if not re.match("^[a-zA-Z0-9._-]+$", returned_filename):
+            raise HTTPException(status_code=400, detail="Invalid returned filename")
+        if original_filename.split(".")[-1].lower() not in allowed_file_types:
             raise HTTPException(status_code=400, detail=f"Only {', '.join(allowed_file_types)} images are allowed for original image")
-        if returned.filename.split(".")[-1].lower() not in allowed_file_types:
+        if returned_filename.split(".")[-1].lower() not in allowed_file_types:
             raise HTTPException(status_code=400, detail=f"Only {', '.join(allowed_file_types)} images are allowed for returned image")
         if original.file.size > max_file_size:
             raise HTTPException(status_code=400, detail=f"Original image file size exceeds {max_file_size / (1024 * 1024)}MB limit")
