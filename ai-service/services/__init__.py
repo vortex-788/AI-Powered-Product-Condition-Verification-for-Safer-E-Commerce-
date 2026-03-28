@@ -2,5 +2,5 @@
 import logging
 try:
     from . import service1, service2
-except Exception as e:
-    logging.error(f"Error importing services: {str(e)}")
+except (ImportError, ModuleNotFoundError) as e:
+    logging.error(f"Failed to import services: {e}. This may be due to a missing or incorrect service module. Services attempted to import: service1, service2")
