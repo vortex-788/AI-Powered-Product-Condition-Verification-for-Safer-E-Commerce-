@@ -14,6 +14,8 @@ import cv2
 import numpy as np
 from typing import Dict, List, Any
 import logging
+import sys
+import traceback
 
 class DamageDetector:
     """AI-powered product damage detection using computer vision."""
@@ -57,7 +59,8 @@ class DamageDetector:
         except ImportError as e:
             logging.error(f"ImportError loading model: {str(e)}")
         except Exception as e:
-            logging.error(f"Error loading model: {str(e)}")
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            logging.error(f"Error loading model: {str(e)} at line {exc_tb.tb_lineno} in {exc_tb.tb_frame.f_code.co_filename}")
 
     def analyze(self, image: np.ndarray) -> Dict[str, Any]:
         """
@@ -175,7 +178,8 @@ class DamageDetector:
                 }
             }
         except AttributeError as e:
-            logging.error(f"AttributeError analyzing image: {e} at line {e.__traceback__.tb_lineno} in {e.__traceback__.tb_frame.f_code.co_filename}")
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            logging.error(f"AttributeError analyzing image: {str(e)} at line {exc_tb.tb_lineno} in {exc_tb.tb_frame.f_code.co_filename}")
             return {
                 'condition_score': 0,
                 'grade': 'Unknown',
@@ -183,7 +187,8 @@ class DamageDetector:
                 'analysis': {}
             }
         except ImportError as e:
-            logging.error(f"ImportError analyzing image: {e} at line {e.__traceback__.tb_lineno} in {e.__traceback__.tb_frame.f_code.co_filename}")
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            logging.error(f"ImportError analyzing image: {str(e)} at line {exc_tb.tb_lineno} in {exc_tb.tb_frame.f_code.co_filename}")
             return {
                 'condition_score': 0,
                 'grade': 'Unknown',
@@ -191,7 +196,8 @@ class DamageDetector:
                 'analysis': {}
             }
         except Exception as e:
-            logging.error(f"Error analyzing image: {e} at line {e.__traceback__.tb_lineno} in {e.__traceback__.tb_frame.f_code.co_filename}")
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            logging.error(f"Error analyzing image: {str(e)} at line {exc_tb.tb_lineno} in {exc_tb.tb_frame.f_code.co_filename}")
             return {
                 'condition_score': 0,
                 'grade': 'Unknown',
@@ -233,7 +239,8 @@ class DamageDetector:
                 'reliability_multiplier': max(0.4, min(1.0, reliability))
             }
         except AttributeError as e:
-            logging.error(f"AttributeError assessing image quality: {e} at line {e.__traceback__.tb_lineno} in {e.__traceback__.tb_frame.f_code.co_filename}")
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            logging.error(f"AttributeError assessing image quality: {str(e)} at line {exc_tb.tb_lineno} in {exc_tb.tb_frame.f_code.co_filename}")
             return {
                 'blur_score': 0,
                 'brightness': 0,
@@ -244,7 +251,8 @@ class DamageDetector:
                 'reliability_multiplier': 0.5
             }
         except ImportError as e:
-            logging.error(f"ImportError assessing image quality: {e} at line {e.__traceback__.tb_lineno} in {e.__traceback__.tb_frame.f_code.co_filename}")
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            logging.error(f"ImportError assessing image quality: {str(e)} at line {exc_tb.tb_lineno} in {exc_tb.tb_frame.f_code.co_filename}")
             return {
                 'blur_score': 0,
                 'brightness': 0,
@@ -255,7 +263,8 @@ class DamageDetector:
                 'reliability_multiplier': 0.5
             }
         except Exception as e:
-            logging.error(f"Error assessing image quality: {e} at line {e.__traceback__.tb_lineno} in {e.__traceback__.tb_frame.f_code.co_filename}")
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            logging.error(f"Error assessing image quality: {str(e)} at line {exc_tb.tb_lineno} in {exc_tb.tb_frame.f_code.co_filename}")
             return {
                 'blur_score': 0,
                 'brightness': 0,
@@ -339,13 +348,16 @@ class DamageDetector:
 
             return sorted(damages, key=lambda d: d.get('area_ratio', 0), reverse=True)[:5]
         except AttributeError as e:
-            logging.error(f"AttributeError detecting edge anomalies: {e} at line {e.__traceback__.tb_lineno} in {e.__traceback__.tb_frame.f_code.co_filename}")
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            logging.error(f"AttributeError detecting edge anomalies: {str(e)} at line {exc_tb.tb_lineno} in {exc_tb.tb_frame.f_code.co_filename}")
             return []
         except ImportError as e:
-            logging.error(f"ImportError detecting edge anomalies: {e} at line {e.__traceback__.tb_lineno} in {e.__traceback__.tb_frame.f_code.co_filename}")
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            logging.error(f"ImportError detecting edge anomalies: {str(e)} at line {exc_tb.tb_lineno} in {exc_tb.tb_frame.f_code.co_filename}")
             return []
         except Exception as e:
-            logging.error(f"Error detecting edge anomalies: {e} at line {e.__traceback__.tb_lineno} in {e.__traceback__.tb_frame.f_code.co_filename}")
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            logging.error(f"Error detecting edge anomalies: {str(e)} at line {exc_tb.tb_lineno} in {exc_tb.tb_frame.f_code.co_filename}")
             return []
 
     def _detect_color_anomalies(self, image: np.ndarray) -> List[Dict]:
@@ -419,13 +431,16 @@ class DamageDetector:
 
             return damages
         except AttributeError as e:
-            logging.error(f"AttributeError detecting color anomalies: {e} at line {e.__traceback__.tb_lineno} in {e.__traceback__.tb_frame.f_code.co_filename}")
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            logging.error(f"AttributeError detecting color anomalies: {str(e)} at line {exc_tb.tb_lineno} in {exc_tb.tb_frame.f_code.co_filename}")
             return []
         except ImportError as e:
-            logging.error(f"ImportError detecting color anomalies: {e} at line {e.__traceback__.tb_lineno} in {e.__traceback__.tb_frame.f_code.co_filename}")
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            logging.error(f"ImportError detecting color anomalies: {str(e)} at line {exc_tb.tb_lineno} in {exc_tb.tb_frame.f_code.co_filename}")
             return []
         except Exception as e:
-            logging.error(f"Error detecting color anomalies: {e} at line {e.__traceback__.tb_lineno} in {e.__traceback__.tb_frame.f_code.co_filename}")
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            logging.error(f"Error detecting color anomalies: {str(e)} at line {exc_tb.tb_lineno} in {exc_tb.tb_frame.f_code.co_filename}")
             return []
 
     def _detect_texture_anomalies(self, image: np.ndarray) -> List[Dict]:
@@ -438,7 +453,7 @@ class DamageDetector:
         try:
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             
-            # Apply CLAHE for more robust texture gradient extraction
+            # Apply CLAHE to equalize lighting before thresholding
             clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
             gray = clahe.apply(gray)
             
@@ -484,13 +499,16 @@ class DamageDetector:
 
             return damages
         except AttributeError as e:
-            logging.error(f"AttributeError detecting texture anomalies: {e} at line {e.__traceback__.tb_lineno} in {e.__traceback__.tb_frame.f_code.co_filename}")
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            logging.error(f"AttributeError detecting texture anomalies: {str(e)} at line {exc_tb.tb_lineno} in {exc_tb.tb_frame.f_code.co_filename}")
             return []
         except ImportError as e:
-            logging.error(f"ImportError detecting texture anomalies: {e} at line {e.__traceback__.tb_lineno} in {e.__traceback__.tb_frame.f_code.co_filename}")
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            logging.error(f"ImportError detecting texture anomalies: {str(e)} at line {exc_tb.tb_lineno} in {exc_tb.tb_frame.f_code.co_filename}")
             return []
         except Exception as e:
-            logging.error(f"Error detecting texture anomalies: {e} at line {e.__traceback__.tb_lineno} in {e.__traceback__.tb_frame.f_code.co_filename}")
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            logging.error(f"Error detecting texture anomalies: {str(e)} at line {exc_tb.tb_lineno} in {exc_tb.tb_frame.f_code.co_filename}")
             return []
 
     def _detect_contour_irregularities(self, image: np.ndarray) -> List[Dict]:
@@ -559,13 +577,16 @@ class DamageDetector:
 
             return sorted(damages, key=lambda d: d.get('area_ratio', 0), reverse=True)[:3]
         except AttributeError as e:
-            logging.error(f"AttributeError detecting contour irregularities: {e} at line {e.__traceback__.tb_lineno} in {e.__traceback__.tb_frame.f_code.co_filename}")
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            logging.error(f"AttributeError detecting contour irregularities: {str(e)} at line {exc_tb.tb_lineno} in {exc_tb.tb_frame.f_code.co_filename}")
             return []
         except ImportError as e:
-            logging.error(f"ImportError detecting contour irregularities: {e} at line {e.__traceback__.tb_lineno} in {e.__traceback__.tb_frame.f_code.co_filename}")
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            logging.error(f"ImportError detecting contour irregularities: {str(e)} at line {exc_tb.tb_lineno} in {exc_tb.tb_frame.f_code.co_filename}")
             return []
         except Exception as e:
-            logging.error(f"Error detecting contour irregularities: {e} at line {e.__traceback__.tb_lineno} in {e.__traceback__.tb_frame.f_code.co_filename}")
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            logging.error(f"Error detecting contour irregularities: {str(e)} at line {exc_tb.tb_lineno} in {exc_tb.tb_frame.f_code.co_filename}")
             return []
 
     def _ml_classify(self, image: np.ndarray) -> Dict[str, float]:
@@ -587,13 +608,16 @@ class DamageDetector:
                     results[dtype] = float(predictions[i])
             return results
         except AttributeError as e:
-            logging.error(f"AttributeError running ML classification: {e} at line {e.__traceback__.tb_lineno} in {e.__traceback__.tb_frame.f_code.co_filename}")
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            logging.error(f"AttributeError running ML classification: {str(e)} at line {exc_tb.tb_lineno} in {exc_tb.tb_frame.f_code.co_filename}")
             return {}
         except ImportError as e:
-            logging.error(f"ImportError running ML classification: {e} at line {e.__traceback__.tb_lineno} in {e.__traceback__.tb_frame.f_code.co_filename}")
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            logging.error(f"ImportError running ML classification: {str(e)} at line {exc_tb.tb_lineno} in {exc_tb.tb_frame.f_code.co_filename}")
             return {}
         except Exception as e:
-            logging.error(f"Error running ML classification: {e} at line {e.__traceback__.tb_lineno} in {e.__traceback__.tb_frame.f_code.co_filename}")
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            logging.error(f"Error running ML classification: {str(e)} at line {exc_tb.tb_lineno} in {exc_tb.tb_frame.f_code.co_filename}")
             return {}
 
     def _get_severity(self, area_ratio: float) -> str:
@@ -604,8 +628,10 @@ class DamageDetector:
                     return severity
             return 'minor'
         except AttributeError as e:
-            logging.error(f"AttributeError determining damage severity: {e} at line {e.__traceback__.tb_lineno} in {e.__traceback__.tb_frame.f_code.co_filename}")
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            logging.error(f"AttributeError determining damage severity: {str(e)} at line {exc_tb.tb_lineno} in {exc_tb.tb_frame.f_code.co_filename}")
             return 'minor'
         except Exception as e:
-            logging.error(f"Error determining damage severity: {e} at line {e.__traceback__.tb_lineno} in {e.__traceback__.tb_frame.f_code.co_filename}")
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            logging.error(f"Error determining damage severity: {str(e)} at line {exc_tb.tb_lineno} in {exc_tb.tb_frame.f_code.co_filename}")
             return 'minor'
