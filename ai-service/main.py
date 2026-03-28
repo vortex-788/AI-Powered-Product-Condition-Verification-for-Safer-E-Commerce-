@@ -128,6 +128,15 @@ async def compare_images(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/validate")
+async def validate(query_param: str = Query(...)):
+    try:
+        validate_query_param(query_param)
+        return JSONResponse(content={"message": "Query parameter is valid"}, status_code=200)
+    except HTTPException as e:
+        return JSONResponse(content={"message": "Query parameter is invalid"}, status_code=e.status_code)
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
