@@ -21,11 +21,11 @@ class VideoProcessor:
         self.min_frame_interval = 0.5  # Minimum seconds between frames
         self.confirmation_threshold = 2  # Damage must appear in N+ frames to be "confirmed"
 
-    def _handle_error(self, e: Exception, error_message: str) -> Dict[str, Any]:
+    def _handle_error(self, e: Exception, error_message: str, video_path: str) -> Dict[str, Any]:
         return {
             'condition_score': 0,
             'grade': 'Damaged',
-            'error': f'{error_message}: {str(e)}',
+            'error': f'Error processing video {video_path}: {error_message} - {str(e)}',
             'frames_analyzed': 0,
             'frame_results': [],
             'damages': []
@@ -44,17 +44,17 @@ class VideoProcessor:
         try:
             cap = cv2.VideoCapture(video_path)
         except FileNotFoundError as e:
-            return self._handle_error(e, 'Video file not found')
+            return self._handle_error(e, 'Video file not found', video_path)
         except cv2.error as e:
-            return self._handle_error(e, 'OpenCV error')
+            return self._handle_error(e, 'OpenCV error opening video', video_path)
         except Exception as e:
-            return self._handle_error(e, 'An error occurred')
+            return self._handle_error(e, 'An error occurred while opening video', video_path)
 
         if not cap.isOpened():
             return {
                 'condition_score': 0,
                 'grade': 'Damaged',
-                'error': 'Could not open video file',
+                'error': f'Could not open video file {video_path}',
                 'frames_analyzed': 0,
                 'frame_results': [],
                 'damages': []
@@ -72,7 +72,7 @@ class VideoProcessor:
             return {
                 'condition_score': 0,
                 'grade': 'Damaged',
-                'error': 'No valid frames extracted',
+                'error': f'No valid frames extracted from video {video_path}',
                 'frames_analyzed': 0,
                 'frame_results': [],
                 'damages': []
@@ -83,7 +83,11 @@ class VideoProcessor:
         all_damages = []
 
         for i, (frame_num, frame) in enumerate(keyframes):
-            result = self.damage_detector.analyze(frame)
+            try:
+                result = self.damage_detector.analyze(frame)
+            except Exception as e:
+                return self._handle_error(e, f'Error analyzing frame {frame_num} of video {video_path}', video_path)
+
             timestamp = frame_num / fps
 
             frame_result = {
