@@ -105,6 +105,48 @@ class FraudComparator:
                 'recommendation': recommendation,
                 'error': None
             }
+        except ValueError as e:
+            logging.error(f"ValueError occurred: {e}")
+            return {
+                'similarity_score': 0,
+                'fraud_detected': False,
+                'fraud_type': 'none',
+                'fraud_confidence': 0.0,
+                'risk_level': 'low',
+                'details': {
+                    'structural_similarity': 0,
+                    'feature_match_score': 0,
+                    'color_histogram_match': 0,
+                    'texture_analysis': 0,
+                    'perceptual_hash_score': 0,
+                    'hash_distance': 0,
+                    'image_aligned': False,
+                    'anomalies': []
+                },
+                'recommendation': 'REVIEW REQUIRED: A ValueError occurred during the comparison process.',
+                'error': str(e)
+            }
+        except TypeError as e:
+            logging.error(f"TypeError occurred: {e}")
+            return {
+                'similarity_score': 0,
+                'fraud_detected': False,
+                'fraud_type': 'none',
+                'fraud_confidence': 0.0,
+                'risk_level': 'low',
+                'details': {
+                    'structural_similarity': 0,
+                    'feature_match_score': 0,
+                    'color_histogram_match': 0,
+                    'texture_analysis': 0,
+                    'perceptual_hash_score': 0,
+                    'hash_distance': 0,
+                    'image_aligned': False,
+                    'anomalies': []
+                },
+                'recommendation': 'REVIEW REQUIRED: A TypeError occurred during the comparison process.',
+                'error': str(e)
+            }
         except Exception as e:
             logging.error(f"An unexpected error occurred: {e}")
             return {
@@ -170,6 +212,12 @@ class FraudComparator:
             aligned = cv2.warpPerspective(img2, H, (w, h))
             return aligned, True
 
+        except ValueError as e:
+            logging.error(f"ValueError occurred in _align_images: {e}")
+            return img2, False
+        except TypeError as e:
+            logging.error(f"TypeError occurred in _align_images: {e}")
+            return img2, False
         except Exception as e:
             logging.error(f"An error occurred in _align_images: {e}")
             return img2, False
@@ -189,6 +237,12 @@ class FraudComparator:
 
             avg_distance = (ahash_dist + dhash_dist) / 2.0
             return avg_distance, ahash_dist, dhash_dist
+        except ValueError as e:
+            logging.error(f"ValueError occurred in _compute_perceptual_hash: {e}")
+            return 0, 0, 0
+        except TypeError as e:
+            logging.error(f"TypeError occurred in _compute_perceptual_hash: {e}")
+            return 0, 0, 0
         except Exception as e:
             logging.error(f"An error occurred in _compute_perceptual_hash: {e}")
             return 0, 0, 0
@@ -203,6 +257,12 @@ class FraudComparator:
             for pixel in resized.flatten():
                 hash_val = (hash_val << 1) | (1 if pixel >= mean_val else 0)
             return hash_val
+        except ValueError as e:
+            logging.error(f"ValueError occurred in _average_hash: {e}")
+            return 0
+        except TypeError as e:
+            logging.error(f"TypeError occurred in _average_hash: {e}")
+            return 0
         except Exception as e:
             logging.error(f"An error occurred in _average_hash: {e}")
             return 0
@@ -217,6 +277,12 @@ class FraudComparator:
                 for col in range(hash_size):
                     hash_val = (hash_val << 1) | (1 if resized[row, col] > resized[row, col + 1] else 0)
             return hash_val
+        except ValueError as e:
+            logging.error(f"ValueError occurred in _difference_hash: {e}")
+            return 0
+        except TypeError as e:
+            logging.error(f"TypeError occurred in _difference_hash: {e}")
+            return 0
         except Exception as e:
             logging.error(f"An error occurred in _difference_hash: {e}")
             return 0
@@ -225,6 +291,12 @@ class FraudComparator:
         """Compute Hamming distance between two hashes."""
         try:
             return bin(hash1 ^ hash2).count('1')
+        except ValueError as e:
+            logging.error(f"ValueError occurred in _hamming_distance: {e}")
+            return 0
+        except TypeError as e:
+            logging.error(f"TypeError occurred in _hamming_distance: {e}")
+            return 0
         except Exception as e:
             logging.error(f"An error occurred in _hamming_distance: {e}")
             return 0
@@ -314,6 +386,12 @@ class FraudComparator:
 
             # No fraud
             return False, 'none', 0.0, anomalies
+        except ValueError as e:
+            logging.error(f"ValueError occurred in _classify_fraud: {e}")
+            return False, 'none', 0.0, []
+        except TypeError as e:
+            logging.error(f"TypeError occurred in _classify_fraud: {e}")
+            return False, 'none', 0.0, []
         except Exception as e:
             logging.error(f"An error occurred in _classify_fraud: {e}")
             return False, 'none', 0.0, []
@@ -336,6 +414,12 @@ class FraudComparator:
             else:
                 return ('APPROVE: Product appears to match the original within acceptable margins. '
                         'No fraud indicators detected.')
+        except ValueError as e:
+            logging.error(f"ValueError occurred in _generate_recommendation: {e}")
+            return 'REVIEW REQUIRED: A ValueError occurred during the recommendation process.'
+        except TypeError as e:
+            logging.error(f"TypeError occurred in _generate_recommendation: {e}")
+            return 'REVIEW REQUIRED: A TypeError occurred during the recommendation process.'
         except Exception as e:
             logging.error(f"An error occurred in _generate_recommendation: {e}")
             return 'REVIEW REQUIRED: An error occurred during the recommendation process.'
@@ -347,6 +431,12 @@ class FraudComparator:
             gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
             score, _ = ssim(gray1, gray2, full=True)
             return max(0, float(score))
+        except ValueError as e:
+            logging.error(f"ValueError occurred in _compute_ssim: {e}")
+            return 0.5
+        except TypeError as e:
+            logging.error(f"TypeError occurred in _compute_ssim: {e}")
+            return 0.5
         except Exception as e:
             logging.error(f"An error occurred in _compute_ssim: {e}")
             return 0.5
@@ -394,6 +484,12 @@ class FraudComparator:
                     return min(inliers / max_possible * 2.5, 1.0)
 
             return min(len(good_matches) / max_possible * 2, 1.0)
+        except ValueError as e:
+            logging.error(f"ValueError occurred in _compute_feature_match: {e}")
+            return 0.5
+        except TypeError as e:
+            logging.error(f"TypeError occurred in _compute_feature_match: {e}")
+            return 0.5
         except Exception as e:
             logging.error(f"An error occurred in _compute_feature_match: {e}")
             return 0.5
@@ -417,6 +513,12 @@ class FraudComparator:
 
             score = cv2.compareHist(hist1, hist2, cv2.HISTCMP_CORREL)
             return max(0, float(score))
+        except ValueError as e:
+            logging.error(f"ValueError occurred in _compute_histogram_match: {e}")
+            return 0.5
+        except TypeError as e:
+            logging.error(f"TypeError occurred in _compute_histogram_match: {e}")
+            return 0.5
         except Exception as e:
             logging.error(f"An error occurred in _compute_histogram_match: {e}")
             return 0.5
@@ -442,6 +544,12 @@ class FraudComparator:
             if norm1 > 0 and norm2 > 0:
                 correlation = np.sum(tex1 * tex2) / (norm1 * norm2)
                 return max(0.0, min(1.0, float(correlation)))
+            return 0.5
+        except ValueError as e:
+            logging.error(f"ValueError occurred in _compute_texture_similarity: {e}")
+            return 0.5
+        except TypeError as e:
+            logging.error(f"TypeError occurred in _compute_texture_similarity: {e}")
             return 0.5
         except Exception as e:
             logging.error(f"An error occurred in _compute_texture_similarity: {e}")
