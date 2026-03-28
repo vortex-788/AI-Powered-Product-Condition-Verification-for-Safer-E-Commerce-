@@ -52,6 +52,10 @@ class DamageDetector:
     def _load_model_with_error_handling(self):
         try:
             self._load_model()
+        except AttributeError as e:
+            logging.error(f"AttributeError loading model: {str(e)}")
+        except ImportError as e:
+            logging.error(f"ImportError loading model: {str(e)}")
         except Exception as e:
             logging.error(f"Error loading model: {str(e)}")
 
@@ -170,6 +174,22 @@ class DamageDetector:
                     'image_quality_metrics': quality_metrics
                 }
             }
+        except AttributeError as e:
+            logging.error(f"AttributeError analyzing image: {str(e)}")
+            return {
+                'condition_score': 0,
+                'grade': 'Unknown',
+                'damages': [],
+                'analysis': {}
+            }
+        except ImportError as e:
+            logging.error(f"ImportError analyzing image: {str(e)}")
+            return {
+                'condition_score': 0,
+                'grade': 'Unknown',
+                'damages': [],
+                'analysis': {}
+            }
         except Exception as e:
             logging.error(f"Error analyzing image: {str(e)}")
             return {
@@ -211,6 +231,28 @@ class DamageDetector:
                 'is_poor_lighting': bool(is_underexposed or is_overexposed),
                 'is_low_contrast': bool(is_low_contrast),
                 'reliability_multiplier': max(0.4, min(1.0, reliability))
+            }
+        except AttributeError as e:
+            logging.error(f"AttributeError assessing image quality: {str(e)}")
+            return {
+                'blur_score': 0,
+                'brightness': 0,
+                'contrast': 0,
+                'is_blurry': False,
+                'is_poor_lighting': False,
+                'is_low_contrast': False,
+                'reliability_multiplier': 0.5
+            }
+        except ImportError as e:
+            logging.error(f"ImportError assessing image quality: {str(e)}")
+            return {
+                'blur_score': 0,
+                'brightness': 0,
+                'contrast': 0,
+                'is_blurry': False,
+                'is_poor_lighting': False,
+                'is_low_contrast': False,
+                'reliability_multiplier': 0.5
             }
         except Exception as e:
             logging.error(f"Error assessing image quality: {str(e)}")
@@ -296,6 +338,12 @@ class DamageDetector:
                     })
 
             return sorted(damages, key=lambda d: d.get('area_ratio', 0), reverse=True)[:5]
+        except AttributeError as e:
+            logging.error(f"AttributeError detecting edge anomalies: {str(e)}")
+            return []
+        except ImportError as e:
+            logging.error(f"ImportError detecting edge anomalies: {str(e)}")
+            return []
         except Exception as e:
             logging.error(f"Error detecting edge anomalies: {str(e)}")
             return []
@@ -370,6 +418,12 @@ class DamageDetector:
                     })
 
             return damages
+        except AttributeError as e:
+            logging.error(f"AttributeError detecting color anomalies: {str(e)}")
+            return []
+        except ImportError as e:
+            logging.error(f"ImportError detecting color anomalies: {str(e)}")
+            return []
         except Exception as e:
             logging.error(f"Error detecting color anomalies: {str(e)}")
             return []
@@ -429,6 +483,12 @@ class DamageDetector:
                 })
 
             return damages
+        except AttributeError as e:
+            logging.error(f"AttributeError detecting texture anomalies: {str(e)}")
+            return []
+        except ImportError as e:
+            logging.error(f"ImportError detecting texture anomalies: {str(e)}")
+            return []
         except Exception as e:
             logging.error(f"Error detecting texture anomalies: {str(e)}")
             return []
@@ -498,6 +558,12 @@ class DamageDetector:
                         pass
 
             return sorted(damages, key=lambda d: d.get('area_ratio', 0), reverse=True)[:3]
+        except AttributeError as e:
+            logging.error(f"AttributeError detecting contour irregularities: {str(e)}")
+            return []
+        except ImportError as e:
+            logging.error(f"ImportError detecting contour irregularities: {str(e)}")
+            return []
         except Exception as e:
             logging.error(f"Error detecting contour irregularities: {str(e)}")
             return []
@@ -520,6 +586,12 @@ class DamageDetector:
                 if predictions[i] > 0.4:
                     results[dtype] = float(predictions[i])
             return results
+        except AttributeError as e:
+            logging.error(f"AttributeError running ML classification: {str(e)}")
+            return {}
+        except ImportError as e:
+            logging.error(f"ImportError running ML classification: {str(e)}")
+            return {}
         except Exception as e:
             logging.error(f"Error running ML classification: {str(e)}")
             return {}
@@ -530,6 +602,9 @@ class DamageDetector:
             for severity, (low, high) in self.SEVERITY_THRESHOLDS.items():
                 if low <= area_ratio < high:
                     return severity
+            return 'minor'
+        except AttributeError as e:
+            logging.error(f"AttributeError determining damage severity: {str(e)}")
             return 'minor'
         except Exception as e:
             logging.error(f"Error determining damage severity: {str(e)}")
