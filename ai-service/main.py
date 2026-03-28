@@ -48,19 +48,23 @@ async def health():
     return {"status": "healthy", "models_loaded": True}
 
 
+def validate_file(file: UploadFile):
+    allowed_file_types = ["jpg", "jpeg", "png", "mp4", "avi"]
+    max_file_size = 1024 * 1024 * 50
+    filename = file.filename
+    if not re.match("^[a-zA-Z0-9._-]+$", filename):
+        raise HTTPException(status_code=400, detail="Invalid filename")
+    if filename.split(".")[-1].lower() not in allowed_file_types:
+        raise HTTPException(status_code=400, detail=f"Only {', '.join(allowed_file_types)} files are allowed")
+    if file.file.size > max_file_size:
+        raise HTTPException(status_code=400, detail=f"File size exceeds {max_file_size / (1024 * 1024)}MB limit")
+
+
 @app.post("/analyze/image")
 async def analyze_image(file: UploadFile = File(...)):
     """Analyze a product image for damage detection."""
     try:
-        allowed_file_types = ["jpg", "jpeg", "png"]
-        max_file_size = 1024 * 1024 * 5
-        filename = file.filename
-        if not re.match("^[a-zA-Z0-9._-]+$", filename):
-            raise HTTPException(status_code=400, detail="Invalid filename")
-        if filename.split(".")[-1].lower() not in allowed_file_types:
-            raise HTTPException(status_code=400, detail=f"Only {', '.join(allowed_file_types)} images are allowed")
-        if file.file.size > max_file_size:
-            raise HTTPException(status_code=400, detail=f"File size exceeds {max_file_size / (1024 * 1024)}MB limit")
+        validate_file(file)
         contents = await file.read()
         image = Image.open(io.BytesIO(contents)).convert("RGB")
         image_np = np.array(image)
@@ -76,15 +80,7 @@ async def analyze_image(file: UploadFile = File(...)):
 async def analyze_video(file: UploadFile = File(...)):
     """Analyze a product video by extracting and processing frames."""
     try:
-        allowed_file_types = ["mp4", "avi"]
-        max_file_size = 1024 * 1024 * 50
-        filename = file.filename
-        if not re.match("^[a-zA-Z0-9._-]+$", filename):
-            raise HTTPException(status_code=400, detail="Invalid filename")
-        if filename.split(".")[-1].lower() not in allowed_file_types:
-            raise HTTPException(status_code=400, detail=f"Only {', '.join(allowed_file_types)} videos are allowed")
-        if file.file.size > max_file_size:
-            raise HTTPException(status_code=400, detail=f"File size exceeds {max_file_size / (1024 * 1024)}MB limit")
+        validate_file(file)
         # Save video to temp file
         suffix = os.path.splitext(file.filename)[1] if file.filename else ".mp4"
         with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
@@ -108,22 +104,8 @@ async def compare_images(
 ):
     """Compare original vs returned product images for fraud detection."""
     try:
-        allowed_file_types = ["jpg", "jpeg", "png"]
-        max_file_size = 1024 * 1024 * 5
-        original_filename = original.filename
-        returned_filename = returned.filename
-        if not re.match("^[a-zA-Z0-9._-]+$", original_filename):
-            raise HTTPException(status_code=400, detail="Invalid original filename")
-        if not re.match("^[a-zA-Z0-9._-]+$", returned_filename):
-            raise HTTPException(status_code=400, detail="Invalid returned filename")
-        if original_filename.split(".")[-1].lower() not in allowed_file_types:
-            raise HTTPException(status_code=400, detail=f"Only {', '.join(allowed_file_types)} images are allowed for original image")
-        if returned_filename.split(".")[-1].lower() not in allowed_file_types:
-            raise HTTPException(status_code=400, detail=f"Only {', '.join(allowed_file_types)} images are allowed for returned image")
-        if original.file.size > max_file_size:
-            raise HTTPException(status_code=400, detail=f"Original image file size exceeds {max_file_size / (1024 * 1024)}MB limit")
-        if returned.file.size > max_file_size:
-            raise HTTPException(status_code=400, detail=f"Returned image file size exceeds {max_file_size / (1024 * 1024)}MB limit")
+        validate_file(original)
+        validate_file(returned)
         orig_contents = await original.read()
         ret_contents = await returned.read()
 
