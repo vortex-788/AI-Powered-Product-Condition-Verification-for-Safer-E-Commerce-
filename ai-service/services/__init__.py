@@ -13,8 +13,11 @@ def import_service(module_name):
     except ModuleNotFoundError as e:
         logging.error(f"Module {module_name} not found: {e}. Please ensure the module is installed and available. Module name: {module_name}, Error type: {type(e).__name__}, Error message: {str(e)}")
         raise
-    except Exception as e:
-        logging.error(f"An unexpected error occurred while importing {module_name}: {e}. Module name: {module_name}, Error type: {type(e).__name__}, Error message: {str(e)}")
+    except OSError as e:
+        logging.error(f"An OS-related error occurred while importing {module_name}: {e}. Module name: {module_name}, Error type: {type(e).__name__}, Error message: {str(e)}")
+        raise
+    except RuntimeError as e:
+        logging.error(f"A runtime error occurred while importing {module_name}: {e}. Module name: {module_name}, Error type: {type(e).__name__}, Error message: {str(e)}")
         raise
 
 try:
