@@ -79,8 +79,14 @@ async def analyze_image(file: UploadFile = File(...), query_param: str = Query(N
 
         result = damage_detector.analyze(image_cv)
         return JSONResponse(content=result)
+    except HTTPException as e:
+        raise e
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid image: {str(e)}")
+    except cv2.error as e:
+        raise HTTPException(status_code=500, detail=f"Error processing image: {str(e)}")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
 
 @app.post("/analyze/video")
