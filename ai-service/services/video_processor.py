@@ -21,11 +21,11 @@ class VideoProcessor:
         self.min_frame_interval = 0.5  # Minimum seconds between frames
         self.confirmation_threshold = 2  # Damage must appear in N+ frames to be "confirmed"
 
-    def _handle_error(self, e: Exception, error_message: str, video_path: str) -> Dict[str, Any]:
+    def _handle_error(self, e: Exception, error_message: str, video_path: str, frame_num: int = None) -> Dict[str, Any]:
         return {
             'condition_score': 0,
             'grade': 'Damaged',
-            'error': f'Error processing video {video_path}: {error_message} - {str(e)}',
+            'error': f'Error processing video {video_path}: {error_message} - {str(e)}' + (f' at frame {frame_num}' if frame_num is not None else ''),
             'frames_analyzed': 0,
             'frame_results': [],
             'damages': []
@@ -86,7 +86,7 @@ class VideoProcessor:
             try:
                 result = self.damage_detector.analyze(frame)
             except Exception as e:
-                return self._handle_error(e, f'Error analyzing frame {frame_num} of video {video_path}', video_path)
+                return self._handle_error(e, f'Error analyzing frame {frame_num} of video {video_path}', video_path, frame_num)
 
             timestamp = frame_num / fps
 
