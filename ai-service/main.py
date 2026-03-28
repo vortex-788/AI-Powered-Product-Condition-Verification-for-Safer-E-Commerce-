@@ -6,7 +6,7 @@ import os
 import io
 import uuid
 import tempfile
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import numpy as np
@@ -60,11 +60,18 @@ def validate_file(file: UploadFile):
         raise HTTPException(status_code=400, detail=f"File size exceeds {max_file_size / (1024 * 1024)}MB limit")
 
 
+def validate_query_param(param: str):
+    if not re.match("^[a-zA-Z0-9._-]+$", param):
+        raise HTTPException(status_code=400, detail="Invalid query parameter")
+
+
 @app.post("/analyze/image")
-async def analyze_image(file: UploadFile = File(...)):
+async def analyze_image(file: UploadFile = File(...), query_param: str = Query(None)):
     """Analyze a product image for damage detection."""
     try:
         validate_file(file)
+        if query_param:
+            validate_query_param(query_param)
         contents = await file.read()
         image = Image.open(io.BytesIO(contents)).convert("RGB")
         image_np = np.array(image)
