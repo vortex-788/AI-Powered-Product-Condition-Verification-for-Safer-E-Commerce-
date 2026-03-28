@@ -47,8 +47,10 @@ class VideoProcessor:
             return self._handle_error(e, 'Video file not found', video_path)
         except cv2.error as e:
             return self._handle_error(e, 'OpenCV error opening video', video_path)
-        except Exception as e:
-            return self._handle_error(e, 'An error occurred while opening video', video_path)
+        except OSError as e:
+            return self._handle_error(e, 'OS error opening video', video_path)
+        except RuntimeError as e:
+            return self._handle_error(e, 'Runtime error opening video', video_path)
 
         if not cap.isOpened():
             return {
@@ -85,8 +87,12 @@ class VideoProcessor:
         for i, (frame_num, frame) in enumerate(keyframes):
             try:
                 result = self.damage_detector.analyze(frame)
+            except AttributeError as e:
+                return self._handle_error(e, f'Error analyzing frame {frame_num} of video {video_path}: damage detector not properly initialized', video_path, frame_num)
+            except TypeError as e:
+                return self._handle_error(e, f'Error analyzing frame {frame_num} of video {video_path}: invalid frame data', video_path, frame_num)
             except Exception as e:
-                return self._handle_error(e, f'Error analyzing frame {frame_num} of video {video_path}', video_path, frame_num)
+                return self._handle_error(e, f'Error analyzing frame {frame_num} of video {video_path}: unknown error', video_path, frame_num)
 
             timestamp = frame_num / fps
 
